@@ -1,0 +1,38 @@
+@page "{id:long}"
+@model Store.Web.Pages.Products.SuppliersModel
+@{ ViewData["Title"] = "Постачальники товару"; }
+<a class="back-link" asp-page="/Products/Index">← До каталогу</a>
+<div class="page-heading">
+ <div><p class="eyebrow">Каталог / Постачальники</p><h1>Постачальники товару</h1><p class="page-subtitle">Вкажіть, у кого закуповуєте товар і за якою ціною.</p></div>
+ <a class="btn btn-outline" asp-page="/Products/Edit" asp-route-id="@Model.Product.Id">Редагувати товар</a>
+</div>
+<div class="surface document-meta">
+ <div><span>Товар</span><strong>@Model.Product.Name</strong></div>
+ <div><span>Артикул</span><strong>@Model.Product.Sku</strong></div>
+ <div><span>Одиниця виміру</span><strong>@Ui.Unit(Model.Product.Unit)</strong></div>
+ <div><span>Ціна продажу</span><strong>@Ui.Money(Model.Product.SalePrice) ₴</strong></div>
+</div>
+<div class="supplier-grid mt-section">
+ <section class="surface">
+  <div class="section-heading"><h2>Закупівельні ціни</h2><span class="muted">@Model.Offers.Count постачальників</span></div>
+  @if(Model.Offers.Count == 0) {
+   <div class="empty-state"><span class="empty-symbol">＋</span><h3>Додайте першого постачальника</h3><p>Після збереження товар з’явиться в асортименті цього постачальника у формі постачання.</p></div>
+  } else {
+   <div class="table-wrap"><table class="data-table"><thead><tr><th>Постачальник</th><th class="numeric">Ціна за @Ui.Unit(Model.Product.Unit)</th><th><span class="visually-hidden">Дії</span></th></tr></thead><tbody>
+    @foreach(var offer in Model.Offers) {
+     <tr><td><strong>@offer.SupplierName</strong></td><td class="numeric money">@Ui.Money(offer.PurchasePrice) ₴</td><td class="action-cell"><a class="btn btn-sm btn-outline" asp-page="/Products/Suppliers" asp-route-id="@Model.Product.Id" asp-route-supplierId="@offer.SupplierId">Змінити ціну</a></td></tr>
+    }
+   </tbody></table></div>
+   <div class="line-help"><a class="text-link" asp-page="/Supplies/Create">Прийняти постачання →</a></div>
+  }
+ </section>
+ <form method="post" asp-route-id="@Model.Product.Id" class="surface editor-panel supplier-editor" data-once>
+  <p class="eyebrow">Постачальник і ціна</p><h2>Додати або оновити</h2>
+  <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+  <div class="field"><label asp-for="SupplierId">Постачальник</label><select asp-for="SupplierId" class="form-select" required><option value="">Оберіть постачальника</option>@foreach(var supplier in Model.Suppliers) { <option value="@supplier.Id">@supplier.Name</option> }</select><span asp-validation-for="SupplierId"></span></div>
+  <div class="field"><label asp-for="PurchasePrice">Закупівельна ціна, грн</label><input asp-for="PurchasePrice" class="form-control" type="number" min="0" max="9999999999.99" step="0.01" required /><span asp-validation-for="PurchasePrice"></span><small>Ціна за 1 @Ui.Unit(Model.Product.Unit). Якщо постачальник уже є у списку, його ціну буде оновлено.</small></div>
+  <div class="form-actions"><button class="btn btn-primary" type="submit">Зберегти постачальника</button></div>
+  <p class="audit-note">Нова ціна застосовується до наступних постачань. Вартість уже прийнятих документів зберігається.</p>
+ </form>
+</div>
+

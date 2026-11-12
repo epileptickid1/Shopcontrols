@@ -1,0 +1,193 @@
+Project department_store {
+  database_type: 'PostgreSQL'
+  Note: 'Один магазин із кількома відділами. Ціни в гривнях. Проведені документи незмінні.'
+}
+
+Table departments {
+  id bigint [pk, increment]
+  name varchar(100) [not null, unique]
+  floor int [not null, default: 1]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table roles {
+  id bigint [pk, increment]
+  name varchar(50) [not null, unique]
+  description text
+}
+
+Table employees {
+  id bigint [pk, increment]
+  department_id bigint [not null, ref: > departments.id]
+  full_name varchar(200) [not null]
+  job_title varchar(100) [not null]
+  phone varchar(30)
+  hired_on date [not null]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table users {
+  id bigint [pk, increment]
+  employee_id bigint [unique, ref: - employees.id]
+  role_id bigint [not null, ref: > roles.id]
+  username varchar(100) [not null, unique]
+  password_hash text [not null]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+  checks {
+    `employee_id IS NOT NULL OR id = 1`
+  }
+  Note: 'Системний запис має id=1. updated_by заповнюється після bootstrap; у готовій схемі він NOT NULL.'
+}
+
+Table categories {
+  id bigint [pk, increment]
+  name varchar(100) [not null, unique]
+  description text
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table products {
+  id bigint [pk, increment]
+  category_id bigint [not null, ref: > categories.id]
+  sku varchar(50) [not null, unique]
+  barcode varchar(50) [unique]
+  name varchar(200) [not null]
+  unit varchar(10) [not null, check: `unit IN ('pcs', 'kg', 'l', 'm')`]
+  sale_price decimal(12,2) [not null, check: `sale_price >= 0`]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table suppliers {
+  id bigint [pk, increment]
+  name varchar(200) [not null]
+  registration_code varchar(20) [not null, unique]
+  phone varchar(30)
+  email varchar(200)
+  address text
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table product_suppliers {
+  product_id bigint [not null, ref: > products.id]
+  supplier_id bigint [not null, ref: > suppliers.id]
+  supplier_sku varchar(100)
+  purchase_price decimal(12,2) [not null, check: `purchase_price >= 0`]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+  indexes {
+    (product_id, supplier_id) [pk]
+  }
+}
+
+Table inventory {
+  department_id bigint [not null, ref: > departments.id]
+  product_id bigint [not null, ref: > products.id]
+  quantity decimal(14,3) [not null, default: 0, check: `quantity >= 0`]
+  minimum_quantity decimal(14,3) [not null, default: 0, check: `minimum_quantity >= 0`]
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+  indexes {
+    (department_id, product_id) [pk]
+  }
+  Note: 'Один залишок товару на відділ. Змінюється транзакційно при проведенні документів.'
+}
+
+Table supplies {
+  id bigint [pk, increment]
+  supplier_id bigint [not null, ref: > suppliers.id]
+  document_number varchar(100) [not null]
+  received_at timestamptz [not null, default: `now()`]
+  created_by bigint [not null, ref: > users.id]
+  status varchar(20) [not null, default: 'draft', check: `status IN ('draft', 'posted', 'cancelled')`]
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+  indexes {
+    (supplier_id, document_number) [unique]
+  }
+  Note: 'Перехід draft -> posted або cancelled. Проведені постачання та їх рядки незмінні.'
+}
+
+Table supply_items {
+  id bigint [pk, increment]
+  supply_id bigint [not null, ref: > supplies.id]
+  department_id bigint [not null]
+  product_id bigint [not null]
+  quantity decimal(14,3) [not null, check: `quantity > 0`]
+  unit_cost decimal(12,2) [not null, check: `unit_cost >= 0`]
+  indexes {
+    (supply_id, department_id, product_id) [unique]
+  }
+  Note: 'unit_cost зберігає ціну на момент постачання. Відповідність постачальнику перевіряє процедура.'
+}
+
+Table customers {
+  id bigint [pk, increment]
+  full_name varchar(200) [not null]
+  phone varchar(30) [unique]
+  email varchar(200)
+  loyalty_card varchar(50) [unique]
+  deleted_at timestamptz
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+}
+
+Table sales {
+  id bigint [pk, increment]
+  receipt_number varchar(50) [not null, unique]
+  customer_id bigint [ref: > customers.id]
+  cashier_id bigint [not null, ref: > users.id]
+  sold_at timestamptz [not null, default: `now()`]
+  status varchar(20) [not null, default: 'draft', check: `status IN ('draft', 'posted', 'cancelled')`]
+  updated_at timestamptz [not null, default: `now()`]
+  updated_by bigint [not null, ref: > users.id]
+  indexes {
+    sold_at [type: btree, name: 'ix_sales_sold_at']
+    customer_id [type: hash, name: 'ix_sales_customer_hash']
+  }
+  Note: 'customer_id NULL для анонімної покупки. Проведений продаж та його рядки й оплати незмінні.'
+}
+
+Table sale_items {
+  id bigint [pk, increment]
+  sale_id bigint [not null, ref: > sales.id]
+  department_id bigint [not null]
+  product_id bigint [not null]
+  quantity decimal(14,3) [not null, check: `quantity > 0`]
+  unit_price decimal(12,2) [not null, check: `unit_price >= 0`]
+  discount_amount decimal(14,2) [not null, default: 0]
+  checks {
+    `discount_amount >= 0 AND discount_amount <= round(quantity * unit_price, 2)`
+  }
+  indexes {
+    (sale_id, department_id, product_id) [unique]
+  }
+  Note: 'Знижка на весь рядок у гривнях. Сума рядка = round(quantity * unit_price, 2) - discount_amount.'
+}
+
+Table payments {
+  id bigint [pk, increment]
+  sale_id bigint [not null, ref: > sales.id]
+  method varchar(20) [not null, check: `method IN ('cash', 'card', 'bank_transfer')`]
+  amount decimal(14,2) [not null, check: `amount > 0`]
+  paid_at timestamptz [not null, default: `now()`]
+  transaction_reference varchar(150) [unique]
+  created_by bigint [not null, ref: > users.id]
+  Note: 'Успішно отримані оплати; кілька оплат дозволяють комбіновану оплату. Готівкова сума без решти.'
+}
+
+Ref: supply_items.(department_id, product_id) > inventory.(department_id, product_id)
+Ref: sale_items.(department_id, product_id) > inventory.(department_id, product_id)
+

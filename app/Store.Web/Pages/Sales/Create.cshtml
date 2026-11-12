@@ -1,0 +1,79 @@
+@page
+@model Store.Web.Pages.Sales.CreateModel
+@using System.Text.Json
+@{ ViewData["Title"]="Новий продаж"; }
+<a class="back-link" asp-page="/Sales/Index">← До продажів</a>
+<div class="page-heading"><div><p class="eyebrow">Продажі / Новий чек</p><h1>Оформити продаж</h1><p class="page-subtitle">Додайте товари, вкажіть оплати та підтвердьте покупку.</p></div><span class="step-badge">Новий документ</span></div>
+<form method="post" id="sale-form" data-once>
+ <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+ <div class="surface editor-panel document-header-fields">
+  <div class="form-grid"><div class="field"><label asp-for="Input.ReceiptNumber">Номер чека</label><input asp-for="Input.ReceiptNumber" class="form-control" maxlength="50" required /><span asp-validation-for="Input.ReceiptNumber"></span></div>
+  <div class="field"><label asp-for="Input.CustomerId">Покупець</label><select asp-for="Input.CustomerId" class="form-select"><option value="">Анонімний покупець</option>@foreach(var c in Model.Customers){<option value="@c.Id">@c.Name</option>}</select></div></div>
+ </div>
+ <section class="surface mt-section">
+  <div class="section-heading"><div><span class="eyebrow">01 / Кошик</span><h2>Товари</h2></div><button type="button" class="btn btn-outline" id="add-sale-line">＋ Додати рядок</button></div>
+  <div id="sale-lines" class="line-list">
+  @for(var i=0;i<Model.Input.Lines.Count;i++) {
+   <div class="sale-line document-line" data-row>
+    <div class="line-number" data-number>@(i+1)</div>
+    <div class="field"><label>Відділ</label><select asp-for="Input.Lines[i].DepartmentId" data-field="DepartmentId" class="form-select" aria-label="Відділ товару" required><option value="">Оберіть відділ</option>@foreach(var d in Model.Departments){<option value="@d.Id">@d.Name</option>}</select></div>
+    <div class="field product-field"><label>Товар</label><select asp-for="Input.Lines[i].ProductId" data-field="ProductId" class="form-select" aria-label="Товар" required><option value="">Оберіть товар</option>@foreach(var p in Model.Products){<option value="@p.Id">@p.Name · @p.Sku</option>}</select><small data-stock>Оберіть товар і відділ</small></div>
+    <div class="field"><label>Кількість</label><input asp-for="Input.Lines[i].Quantity" data-field="Quantity" class="form-control" type="number" min="0.001" step="0.001" required aria-label="Кількість" /></div>
+    <div class="field"><label>Знижка, грн</label><input asp-for="Input.Lines[i].DiscountAmount" data-field="DiscountAmount" class="form-control" type="number" min="0" step="0.01" required aria-label="Знижка на рядок" /></div>
+    <div class="line-sum"><span>Сума</span><strong data-line-total>0,00 ₴</strong></div>
+    <button type="button" class="remove-row" data-remove aria-label="Прибрати товар">×</button>
+   </div>
+  }
+  </div>
+  <div class="line-help">Ціна береться з каталогу. Знижка застосовується до всього рядка.</div>
+ </section>
+ <div class="checkout-grid mt-section">
+  <section class="surface">
+   <div class="section-heading"><div><span class="eyebrow">02 / Розрахунок</span><h2>Оплати</h2></div><button type="button" class="btn btn-outline" id="add-payment">＋ Додати оплату</button></div>
+   <div id="payment-lines" class="line-list">
+   @for(var i=0;i<Model.Input.Payments.Count;i++) {
+    <div class="payment-line document-line" data-row>
+     <div class="field"><label>Спосіб</label><select asp-for="Input.Payments[i].Method" data-field="Method" class="form-select" aria-label="Спосіб оплати"><option value="cash">Готівка</option><option value="card">Картка</option><option value="bank_transfer">Переказ</option></select></div>
+     <div class="field"><label>Сума, грн</label><input asp-for="Input.Payments[i].Amount" data-field="Amount" class="form-control" type="number" min="0.01" step="0.01" aria-label="Сума оплати" required /><button class="fill-payment" data-fill type="button">Заповнити залишок</button></div>
+     <div class="field"><label>Посилання <span class="optional">необов’язково</span></label><input asp-for="Input.Payments[i].Reference" data-field="Reference" class="form-control" maxlength="150" aria-label="Платіжне посилання" placeholder="Номер транзакції" /></div>
+     <button class="remove-row" data-remove type="button" aria-label="Прибрати оплату">×</button>
+    </div>
+   }
+   </div>
+   <div class="line-help">Можна поєднати готівку та картку. Для нульового підсумку приберіть усі оплати.</div>
+  </section>
+  <aside class="surface checkout-summary">
+   <p class="eyebrow">Підсумок покупки</p>
+   <div class="summary-row"><span>Товари до знижок</span><strong id="subtotal">0,00 ₴</strong></div>
+   <div class="summary-row"><span>Знижка</span><strong id="discount-total">0,00 ₴</strong></div>
+   <div class="summary-total"><span>До сплати</span><strong id="sale-total">0,00 ₴</strong></div>
+   <div class="summary-row"><span>Вказані оплати</span><strong id="paid-total">0,00 ₴</strong></div>
+   <div class="balance-note" id="payment-balance" aria-live="polite">Додайте товари до чека.</div>
+   <button class="btn btn-primary btn-full" type="submit">Оформити продаж</button>
+   <p class="summary-caption">Залишки та остаточна сума перевіряються під час оформлення.</p>
+  </aside>
+ </div>
+</form>
+<template id="sale-line-template">
+ <div class="sale-line document-line" data-row>
+  <div class="line-number" data-number></div>
+  <div class="field"><label>Відділ</label><select data-field="DepartmentId" class="form-select" aria-label="Відділ товару" required><option value="">Оберіть відділ</option>@foreach(var d in Model.Departments){<option value="@d.Id">@d.Name</option>}</select></div>
+  <div class="field product-field"><label>Товар</label><select data-field="ProductId" class="form-select" aria-label="Товар" required><option value="">Оберіть товар</option>@foreach(var p in Model.Products){<option value="@p.Id">@p.Name · @p.Sku</option>}</select><small data-stock>Оберіть товар і відділ</small></div>
+  <div class="field"><label>Кількість</label><input data-field="Quantity" class="form-control" type="number" value="1" min="0.001" step="0.001" required aria-label="Кількість" /></div>
+  <div class="field"><label>Знижка, грн</label><input data-field="DiscountAmount" class="form-control" type="number" value="0" min="0" step="0.01" required aria-label="Знижка на рядок" /></div>
+  <div class="line-sum"><span>Сума</span><strong data-line-total>0,00 ₴</strong></div><button type="button" class="remove-row" data-remove aria-label="Прибрати товар">×</button>
+ </div>
+</template>
+<template id="payment-template">
+ <div class="payment-line document-line" data-row>
+  <div class="field"><label>Спосіб</label><select data-field="Method" class="form-select" aria-label="Спосіб оплати"><option value="cash">Готівка</option><option value="card">Картка</option><option value="bank_transfer">Переказ</option></select></div>
+  <div class="field"><label>Сума, грн</label><input data-field="Amount" class="form-control" type="number" min="0.01" step="0.01" value="" aria-label="Сума оплати" required /><button class="fill-payment" data-fill type="button">Заповнити залишок</button></div>
+  <div class="field"><label>Посилання <span class="optional">необов’язково</span></label><input data-field="Reference" class="form-control" maxlength="150" aria-label="Платіжне посилання" placeholder="Номер транзакції" /></div>
+  <button class="remove-row" data-remove type="button" aria-label="Прибрати оплату">×</button>
+ </div>
+</template>
+@section Scripts {
+ <script type="application/json" id="sale-data">@Html.Raw(JsonSerializer.Serialize(new { products=Model.Products, stock=Model.Stock },new JsonSerializerOptions(JsonSerializerDefaults.Web)))</script>
+ <script src="~/js/sale.js" asp-append-version="true"></script>
+}
+

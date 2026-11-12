@@ -1,0 +1,46 @@
+@inject Store.Web.Services.IStoreService StoreService
+@{
+ var page = ViewContext.RouteData.Values["page"]?.ToString() ?? "";
+ var manager = page == "/Error" ? null : await StoreService.CurrentUserAsync(Context.RequestAborted);
+ string Active(string path) => path == "/" ? (page == "/Index" ? "active" : "") : (page.StartsWith(path, StringComparison.OrdinalIgnoreCase) ? "active" : "");
+}
+<!doctype html>
+<html lang="uk">
+<head>
+ <meta charset="utf-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1" />
+ <meta name="color-scheme" content="light" />
+ <title>@ViewData["Title"] · Shopcontrols</title>
+ <link rel="stylesheet" href="~/lib/bootstrap/bootstrap.min.css" />
+ <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+ <a href="#main" class="skip-link">До вмісту</a>
+ <header class="app-header">
+  <div class="header-inner">
+   <a class="brand" asp-page="/Index" aria-label="Shopcontrols — головна"><span class="brand-mark" aria-hidden="true">s</span><span>Shopcontrols</span></a>
+   <nav class="main-nav" aria-label="Основна навігація">
+    <a class="@Active("/")" asp-page="/Index">Огляд</a>
+    <a class="@Active("/Products")" asp-page="/Products/Index">Товари</a>
+    <a class="@Active("/Inventory")" asp-page="/Inventory/Index">Залишки</a>
+    <a class="@Active("/Sales")" asp-page="/Sales/Index">Продажі</a>
+    <a class="@Active("/Supplies")" asp-page="/Supplies/Index">Постачання</a>
+    <a class="@Active("/Managers")" asp-page="/Managers/Index">Менеджери</a>
+   </nav>
+   <a class="profile-chip" asp-page="/Managers/Index"><span class="avatar">М</span><span>@(manager?.FullName ?? "Обрати менеджера")<small>Менеджер магазину</small></span></a>
+  </div>
+ </header>
+ <main id="main" class="app-main">
+  @if (TempData["Success"] is string message) {
+   <div class="notice notice-success" role="status"><span class="notice-icon">✓</span><span>@message</span></div>
+  }
+  @RenderBody()
+ </main>
+ <footer class="app-footer"><span>Shopcontrols · Система управління магазином</span><span>Час документів — Київ</span></footer>
+ <script src="~/js/money.js" asp-append-version="true"></script>
+ <script src="~/js/site.js" asp-append-version="true"></script>
+ @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
+
+

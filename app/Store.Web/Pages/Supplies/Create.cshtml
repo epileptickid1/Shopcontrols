@@ -1,0 +1,44 @@
+@page
+@model Store.Web.Pages.Supplies.CreateModel
+@using System.Text.Json
+@{ ViewData["Title"]="Нове постачання"; }
+<a class="back-link" asp-page="/Supplies/Index">← До постачань</a>
+<div class="page-heading"><div><p class="eyebrow">Постачання / Новий документ</p><h1>Прийняти постачання</h1><p class="page-subtitle">Оберіть постачальника та розподіліть товари між відділами.</p></div><span class="step-badge">Нове надходження</span></div>
+<form method="post" id="supply-form" data-once>
+ <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+ <div class="surface editor-panel document-header-fields"><div class="form-grid">
+  <div class="field"><label for="supplier-select">Постачальник</label><select asp-for="Input.SupplierId" class="form-select" id="supplier-select" required><option value="">Оберіть постачальника</option>@foreach(var s in Model.Suppliers){<option value="@s.Id">@s.Name</option>}</select><span asp-validation-for="Input.SupplierId"></span></div>
+  <div class="field"><label asp-for="Input.DocumentNumber">Номер документа</label><input asp-for="Input.DocumentNumber" class="form-control" maxlength="100" required /><span asp-validation-for="Input.DocumentNumber"></span></div>
+ </div></div>
+ <section class="surface mt-section">
+  <div class="section-heading"><div><p class="eyebrow">Склад постачання</p><h2>Товари та відділи</h2></div><button class="btn btn-outline" type="button" id="add-supply-line">＋ Додати рядок</button></div>
+  <div id="supply-lines" class="line-list">
+   @for(var i=0;i<Model.Input.Lines.Count;i++){
+    <div class="supply-line document-line" data-row><div class="line-number" data-number>@(i+1)</div>
+     <div class="field product-field"><label>Товар постачальника</label><select asp-for="Input.Lines[i].ProductId" data-field="ProductId" class="form-select" aria-label="Товар постачальника" required><option value="">Спочатку оберіть постачальника</option>@foreach(var p in Model.SupplierProducts.DistinctBy(x=>x.ProductId)){<option value="@p.ProductId">@p.ProductName</option>}</select><small data-product-note>Асортимент обраного постачальника</small></div>
+     <div class="field"><label>До відділу</label><select asp-for="Input.Lines[i].DepartmentId" data-field="DepartmentId" class="form-select" aria-label="Відділ надходження" required><option value="">Оберіть відділ</option>@foreach(var d in Model.Departments){<option value="@d.Id">@d.Name</option>}</select></div>
+     <div class="field"><label>Кількість</label><input asp-for="Input.Lines[i].Quantity" data-field="Quantity" class="form-control" type="number" min="0.001" step="0.001" required aria-label="Кількість постачання" /></div>
+     <div class="field"><label>Ціна, грн</label><input asp-for="Input.Lines[i].UnitCost" data-field="UnitCost" class="form-control" type="number" min="0" step="0.01" aria-label="Закупівельна ціна" placeholder="За прайсом" /><small data-price-note>Порожньо — ціна постачальника</small></div>
+     <div class="line-sum"><span>Сума</span><strong data-line-total>0,00 ₴</strong></div><button type="button" class="remove-row" data-remove aria-label="Прибрати товар">×</button>
+    </div>
+   }
+  </div>
+  <div class="line-help">Після підтвердження кількість товару збільшиться у вказаних відділах.</div>
+ </section>
+ <div class="surface supply-submit mt-section"><div><span class="small-label">Загальна вартість постачання</span><strong class="supply-total" id="supply-total">0,00 ₴</strong></div><div class="row-actions"><a class="btn btn-outline" asp-page="/Supplies/Index">Скасувати</a><button class="btn btn-primary" type="submit">Прийняти й провести</button></div></div>
+</form>
+<template id="supply-line-template">
+ <div class="supply-line document-line" data-row><div class="line-number" data-number></div>
+  <div class="field product-field"><label>Товар постачальника</label><select data-field="ProductId" class="form-select" aria-label="Товар постачальника" required><option value="">Оберіть товар</option></select><small data-product-note>Асортимент обраного постачальника</small></div>
+  <div class="field"><label>До відділу</label><select data-field="DepartmentId" class="form-select" aria-label="Відділ надходження" required><option value="">Оберіть відділ</option>@foreach(var d in Model.Departments){<option value="@d.Id">@d.Name</option>}</select></div>
+  <div class="field"><label>Кількість</label><input data-field="Quantity" class="form-control" type="number" value="1" min="0.001" step="0.001" required aria-label="Кількість постачання" /></div>
+  <div class="field"><label>Ціна, грн</label><input data-field="UnitCost" class="form-control" type="number" min="0" step="0.01" aria-label="Закупівельна ціна" placeholder="За прайсом" /><small data-price-note>Порожньо — ціна постачальника</small></div>
+  <div class="line-sum"><span>Сума</span><strong data-line-total>0,00 ₴</strong></div><button type="button" class="remove-row" data-remove aria-label="Прибрати товар">×</button>
+ </div>
+</template>
+@section Scripts {
+ <script type="application/json" id="supply-data">@Html.Raw(JsonSerializer.Serialize(new { supplierProducts=Model.SupplierProducts,products=Model.Products },new JsonSerializerOptions(JsonSerializerDefaults.Web)))</script>
+ <script src="~/js/supply.js" asp-append-version="true"></script>
+}
+
+

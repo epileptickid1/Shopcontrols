@@ -1,0 +1,21 @@
+@page "{id:long?}"
+@model Store.Web.Pages.Products.EditModel
+@{ ViewData["Title"] = Model.Input.Id is null ? "Новий товар" : "Редагування товару"; }
+<a class="back-link" asp-page="/Products/Index">← До каталогу</a>
+<div class="page-heading"><div><p class="eyebrow">Каталог / Товар</p><h1>@ViewData["Title"]</h1><p class="page-subtitle">Заповніть картку товару для обліку в магазині.</p></div>@if(Model.Input.Id is long productId) { <a class="btn btn-outline" asp-page="/Products/Suppliers" asp-route-id="@productId">Постачальники та ціни</a> }</div>
+<form method="post" class="surface editor-panel" data-once>
+ <input type="hidden" asp-for="Input.Id" />
+ <div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+ <div class="form-grid">
+  <div class="field span-2"><label asp-for="Input.Name">Назва товару</label><input class="form-control" asp-for="Input.Name" placeholder="Наприклад, молоко 1 л" maxlength="200" required /><span asp-validation-for="Input.Name"></span></div>
+  <div class="field"><label asp-for="Input.Sku">Артикул</label><input class="form-control" asp-for="Input.Sku" placeholder="MILK-001" maxlength="50" required /><span asp-validation-for="Input.Sku"></span></div>
+  <div class="field"><label asp-for="Input.Barcode">Штрихкод <span class="optional">необов’язково</span></label><input class="form-control" asp-for="Input.Barcode" maxlength="50" /><span asp-validation-for="Input.Barcode"></span></div>
+  <div class="field"><label asp-for="Input.CategoryId">Категорія</label><select class="form-select" asp-for="Input.CategoryId" required><option value="">Оберіть категорію</option>@foreach(var c in Model.Categories) { <option value="@c.Id">@c.Name</option> }</select><span asp-validation-for="Input.CategoryId"></span></div>
+  <div class="field"><label asp-for="Input.Unit">Одиниця виміру</label><select class="form-select" asp-for="Input.Unit"><option value="pcs">Штука (шт.)</option><option value="kg">Кілограм (кг)</option><option value="l">Літр (л)</option><option value="m">Метр (м)</option></select><span asp-validation-for="Input.Unit"></span><small>Після появи залишків одиницю змінити не можна.</small></div>
+  <div class="field"><label asp-for="Input.SalePrice">Ціна продажу, грн</label><input class="form-control" asp-for="Input.SalePrice" type="number" min="0" max="9999999999.99" step="0.01" required /><span asp-validation-for="Input.SalePrice"></span></div>
+ </div>
+ <div class="form-actions"><button class="btn btn-primary" type="submit">@(Model.Input.Id is null ? "Додати товар" : "Зберегти зміни")</button><a class="btn btn-outline" asp-page="/Products/Index">Скасувати</a></div>
+ @if(Model.Existing is not null) { <p class="audit-note">Остання зміна: @Ui.Date(Model.Existing.UpdatedAt) · Користувач №@Model.Existing.UpdatedBy</p> }
+</form>
+
+

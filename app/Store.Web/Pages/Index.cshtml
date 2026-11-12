@@ -1,0 +1,37 @@
+@page
+@model Store.Web.Pages.IndexModel
+@{ ViewData["Title"] = "Огляд магазину"; }
+<div class="page-heading">
+ <div><p class="eyebrow">Магазин / Огляд</p><h1>Усе для робочого дня</h1><p class="page-subtitle">Товари, залишки та документи вашого магазину.</p></div>
+ <a class="btn btn-primary" asp-page="/Sales/Create"><span aria-hidden="true">＋</span> Оформити продаж</a>
+</div>
+<div class="stats-grid">
+ <div class="stat-card"><span class="stat-label">Активні товари</span><strong>@Model.ProductCount</strong><a asp-page="/Products/Index">Перейти до каталогу <span>↗</span></a></div>
+ <div class="stat-card"><span class="stat-label">Відділи магазину</span><strong>@Model.DepartmentCount</strong><a asp-page="/Inventory/Index">Переглянути залишки <span>↗</span></a></div>
+ <div class="stat-card stat-accent"><span class="stat-label">Потребують поповнення</span><strong>@Model.LowStock.Count</strong><a asp-page="/Inventory/Index" asp-route-OnlyLow="true">Перевірити товари <span>↗</span></a></div>
+</div>
+<div class="overview-grid">
+ <section class="surface">
+  <div class="section-heading"><div><p class="eyebrow">Історія операцій</p><h2>Останні продажі</h2></div><a class="text-link" asp-page="/Sales/Index">Усі продажі →</a></div>
+  @if (Model.RecentSales.Count == 0) { <div class="empty-state"><h3>Продажів ще немає</h3><p>Оформіть перший чек, щоб побачити його тут.</p></div> }
+  else {
+   <div class="table-wrap"><table class="data-table"><thead><tr><th>Чек</th><th>Статус</th><th class="numeric">Сума</th></tr></thead><tbody>
+   @foreach(var sale in Model.RecentSales) {
+    <tr><td><a class="record-link" asp-page="/Sales/Details" asp-route-id="@sale.Id">@sale.ReceiptNumber</a><span class="cell-note">@Ui.Date(sale.SoldAt)</span></td><td><span class="status @sale.Status">@Ui.Status(sale.Status)</span></td><td class="numeric money">@Ui.Money(sale.Total) <span>₴</span></td></tr>
+   }</tbody></table></div>
+  }
+ </section>
+ <aside class="surface action-panel">
+  <p class="eyebrow">Швидкі дії</p><h2>Наступний крок</h2>
+  <a class="action-link" asp-page="/Products/Edit"><span class="action-icon">＋</span><span><strong>Додати товар</strong><small>Розширити каталог магазину</small></span><b>↗</b></a>
+  <a class="action-link" asp-page="/Supplies/Create"><span class="action-icon">↓</span><span><strong>Прийняти постачання</strong><small>Поповнити товари у відділах</small></span><b>↗</b></a>
+  <div class="account-note"><span class="small-label">Поточний обліковий запис</span><strong>@(Model.CurrentUser?.FullName ?? Model.CurrentUser?.Username ?? "Менеджер")</strong><span>@Model.CurrentUser?.Username</span></div>
+ </aside>
+</div>
+@if (Model.LowStock.Count > 0) {
+ <section class="surface mt-section">
+  <div class="section-heading"><div><p class="eyebrow">Контроль запасів</p><h2>Час поповнити</h2></div><a class="text-link" asp-page="/Supplies/Create">Нове постачання →</a></div>
+  <div class="stock-alerts">@foreach(var stock in Model.LowStock.Take(4)) { <div class="stock-alert"><div><strong>@stock.ProductName</strong><span>@stock.DepartmentName</span></div><div><b>@Ui.Number(stock.Quantity) @Ui.Unit(stock.Unit)</b><span>мін. @Ui.Number(stock.MinimumQuantity)</span></div></div> }</div>
+ </section>
+}
+

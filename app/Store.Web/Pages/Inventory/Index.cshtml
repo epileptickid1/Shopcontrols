@@ -1,0 +1,21 @@
+@page
+@model Store.Web.Pages.Inventory.IndexModel
+@{ ViewData["Title"] = "Залишки"; }
+<div class="page-heading"><div><p class="eyebrow">Магазин / Запаси</p><h1>Залишки у відділах</h1><p class="page-subtitle">Контролюйте наявність і плануйте поповнення.</p></div><a class="btn btn-primary" asp-page="/Supplies/Create">↓ Прийняти постачання</a></div>
+<div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+<section class="surface">
+ <form method="get" class="list-toolbar filter-toolbar">
+  <div class="field"><label asp-for="DepartmentId">Відділ</label><select asp-for="DepartmentId" class="form-select"><option value="">Усі відділи</option>@foreach(var d in Model.Departments) { <option value="@d.Id">@d.Name</option> }</select></div>
+  <label class="checkbox-field"><input asp-for="OnlyLow" /> Лише потребують поповнення</label><button class="btn btn-outline" type="submit">Застосувати</button>
+ </form>
+ @if(Model.Stock.Count==0) { <div class="empty-state"><span class="empty-symbol">✓</span><h3>Позицій не знайдено</h3><p>Змініть фільтр або прийміть нове постачання.</p></div> }
+ else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Товар</th><th>Відділ</th><th class="numeric">Залишок</th><th>Стан</th><th>Мінімальна кількість</th></tr></thead><tbody>
+ @foreach(var s in Model.Stock) {
+ <tr><td><strong>@s.ProductName</strong><span class="cell-note">@s.Sku</span></td><td>@s.DepartmentName</td><td class="numeric"><strong>@Ui.Number(s.Quantity)</strong> <span class="muted">@Ui.Unit(s.Unit)</span></td><td><span class="status @(s.NeedsRestock ? "low" : "posted")">@(s.NeedsRestock ? "Поповнити" : "Достатньо")</span></td><td>
+ <form class="minimum-form" method="post" asp-page-handler="Minimum">
+ <input type="hidden" name="productId" value="@s.ProductId" /><input type="hidden" name="stockDepartmentId" value="@s.DepartmentId" /><input type="hidden" asp-for="DepartmentId" /><input type="hidden" asp-for="OnlyLow" />
+ <input class="form-control" aria-label="Мінімальний залишок: @s.ProductName, @s.DepartmentName" name="minimum" type="number" value="@Ui.Input(s.MinimumQuantity)" min="0" step="@(s.Unit == "pcs" ? "1" : "0.001")" required /><button class="btn btn-sm btn-outline" type="submit">Зберегти</button>
+ </form></td></tr>
+ }</tbody></table></div><div class="table-footer">Позицій товар–відділ: @Model.Stock.Count</div> }
+</section>
+

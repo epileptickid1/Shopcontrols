@@ -1,0 +1,12 @@
+@page
+@model Store.Web.Pages.Supplies.IndexModel
+@{ ViewData["Title"]="Постачання"; }
+<div class="page-heading"><div><p class="eyebrow">Магазин / Надходження</p><h1>Постачання</h1><p class="page-subtitle">Приймайте товари й поповнюйте запаси відділів.</p></div><a class="btn btn-primary" asp-page="/Supplies/Create">＋ Нове постачання</a></div>
+<section class="surface">
+ <div class="section-heading"><h2>Документи постачання</h2><span class="muted">@Model.Supplies.Count документів у списку</span></div>
+ @if(Model.Supplies.Count==0) { <div class="empty-state"><span class="empty-symbol">↓</span><h3>Постачань ще немає</h3><p>Прийміть першу партію товарів до магазину.</p><a class="btn btn-primary" asp-page="/Supplies/Create">Нове постачання</a></div> }
+ else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Документ / дата</th><th>Постачальник</th><th>Статус</th><th class="numeric">Сума</th><th></th></tr></thead><tbody>
+ @foreach(var s in Model.Supplies) { <tr><td><a class="record-link" asp-page="/Supplies/Details" asp-route-id="@s.Id">@s.DocumentNumber</a><span class="cell-note">@Ui.Date(s.ReceivedAt)</span></td><td>@s.SupplierName</td><td><span class="status @s.Status">@Ui.Status(s.Status)</span></td><td class="numeric money">@Ui.Money(s.Total) ₴</td><td><a class="text-link" asp-page="/Supplies/Details" asp-route-id="@s.Id" aria-label="Переглянути постачання @s.DocumentNumber">Деталі →</a></td></tr> }
+ </tbody></table></div> }
+</section>
+

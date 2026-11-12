@@ -1,0 +1,12 @@
+@page
+@model Store.Web.Pages.Sales.IndexModel
+@{ ViewData["Title"]="Продажі"; }
+<div class="page-heading"><div><p class="eyebrow">Магазин / Операції</p><h1>Продажі</h1><p class="page-subtitle">Останні чеки, оплати та деталі кожної покупки.</p></div><a class="btn btn-primary" asp-page="/Sales/Create">＋ Оформити продаж</a></div>
+<section class="surface">
+ <div class="section-heading"><h2>Історія чеків</h2><span class="muted">@Model.Sales.Count документів у списку</span></div>
+ @if(Model.Sales.Count==0) { <div class="empty-state"><span class="empty-symbol">▤</span><h3>Продажів ще немає</h3><p>Створіть перший чек для покупця.</p><a class="btn btn-primary" asp-page="/Sales/Create">Оформити продаж</a></div> }
+ else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Чек / дата</th><th>Покупець</th><th>Касир</th><th>Статус</th><th class="numeric">Сума</th><th class="numeric">Сплачено</th><th></th></tr></thead><tbody>
+ @foreach(var s in Model.Sales) { <tr><td><a class="record-link" asp-page="/Sales/Details" asp-route-id="@s.Id">@s.ReceiptNumber</a><span class="cell-note">@Ui.Date(s.SoldAt)</span></td><td>@(s.CustomerName ?? "Анонімний покупець")</td><td class="muted">@s.Cashier</td><td><span class="status @s.Status">@Ui.Status(s.Status)</span></td><td class="numeric money">@Ui.Money(s.Total) ₴</td><td class="numeric">@Ui.Money(s.Paid) ₴</td><td><a class="text-link" asp-page="/Sales/Details" asp-route-id="@s.Id" aria-label="Переглянути чек @s.ReceiptNumber">Деталі →</a></td></tr> }
+ </tbody></table></div> }
+</section>
+

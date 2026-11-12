@@ -1,0 +1,20 @@
+@page "{id:long}"
+@model Store.Web.Pages.Sales.DetailsModel
+@{ ViewData["Title"]="Чек " + Model.Details.Sale.ReceiptNumber; var sale=Model.Details.Sale; }
+<a class="back-link" asp-page="/Sales/Index">← До продажів</a>
+<div class="page-heading"><div><p class="eyebrow">Продаж / Чек №@sale.Id</p><h1 class="document-title">@sale.ReceiptNumber</h1><p class="page-subtitle">@Ui.Date(sale.SoldAt)</p></div><span class="status status-large @sale.Status">@Ui.Status(sale.Status)</span></div>
+<div class="document-meta surface"><div><span>Покупець</span><strong>@(sale.CustomerName ?? "Анонімний покупець")</strong></div><div><span>Касир</span><strong>@sale.Cashier</strong></div><div><span>До сплати</span><strong>@Ui.Money(sale.Total) ₴</strong></div><div><span>Залишок оплати</span><strong>@Ui.Money(sale.Balance) ₴</strong></div></div>
+<section class="surface mt-section">
+ <div class="section-heading"><h2>Товари в чеку</h2><span class="muted">@Model.Details.Lines.Count позицій</span></div>
+ <div class="table-wrap"><table class="data-table"><thead><tr><th>Товар</th><th>Відділ</th><th class="numeric">Кількість</th><th class="numeric">Ціна</th><th class="numeric">Знижка</th><th class="numeric">Сума</th></tr></thead><tbody>
+ @foreach(var l in Model.Details.Lines) { <tr><td><strong>@l.ProductName</strong><span class="cell-note">@l.Sku</span></td><td>@l.DepartmentName</td><td class="numeric">@Ui.Number(l.Quantity) @Ui.Unit(l.Unit)</td><td class="numeric">@Ui.Money(l.UnitPrice) ₴</td><td class="numeric">@Ui.Money(l.DiscountAmount) ₴</td><td class="numeric money">@Ui.Money(l.LineTotal) ₴</td></tr> }
+ </tbody></table></div>
+ <div class="document-total"><span>Разом після знижок</span><strong>@Ui.Money(sale.Total) <small>₴</small></strong></div>
+</section>
+<section class="surface mt-section">
+ <div class="section-heading"><h2>Оплати</h2><span class="muted">Сплачено: @Ui.Money(sale.Paid) ₴</span></div>
+ @if(Model.Details.Payments.Count==0) { <div class="empty-state compact"><p>Оплати відсутні.</p></div> }
+ else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Спосіб</th><th>Дата</th><th>Платіжне посилання</th><th class="numeric">Сума</th></tr></thead><tbody>@foreach(var p in Model.Details.Payments) { <tr><td>@Ui.Payment(p.Method)</td><td>@Ui.Date(p.PaidAt)</td><td class="muted">@(p.Reference ?? "—")</td><td class="numeric money">@Ui.Money(p.Amount) ₴</td></tr> }</tbody></table></div> }
+</section>
+@if(sale.Status=="posted") { <p class="audit-note">Ціни й знижки зафіксовані на момент продажу. Проведений чек доступний для перегляду.</p> }
+

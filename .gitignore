@@ -1,0 +1,13 @@
+.runtime/
+node_modules/
+*.log
+
+**/bin/
+**/obj/
+.vs/
+
+docs/
+reports/
+
+plan.md
+ULTIMATE_GUIDE.md

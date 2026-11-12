@@ -1,0 +1,28 @@
+@page
+@model Store.Web.Pages.Products.IndexModel
+@{ ViewData["Title"] = "Товари"; }
+<div class="page-heading">
+ <div><p class="eyebrow">Магазин / Каталог</p><h1>Товари</h1><p class="page-subtitle">Керуйте асортиментом, цінами та архівом.</p></div>
+ <a class="btn btn-primary" asp-page="/Products/Edit">＋ Додати товар</a>
+</div>
+<div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+<section class="surface">
+ <div class="list-toolbar">
+  <div class="tabs" aria-label="Вигляд каталогу"><a class="@(!Model.ShowArchive ? "active" : "")" asp-page="/Products/Index">Активні товари</a><a class="@(Model.ShowArchive ? "active" : "")" asp-page="/Products/Index" asp-route-ShowArchive="true">Архів</a></div>
+  @if (!Model.ShowArchive) { <form method="get" class="search-form"><label for="Search" class="visually-hidden">Пошук за назвою або артикулом</label><input asp-for="Search" class="form-control" placeholder="Назва або артикул…" /><button class="btn btn-outline" type="submit">Знайти</button></form> }
+ </div>
+ @if (Model.ShowArchive) {
+  @if (Model.Archived.Count==0) { <div class="empty-state"><span class="empty-symbol">▤</span><h3>Архів порожній</h3><p>Тут з’являться товари, прибрані з активного каталогу.</p></div> }
+  else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Товар</th><th>Артикул</th><th>Дата архівації</th><th><span class="visually-hidden">Дії</span></th></tr></thead><tbody>
+  @foreach(var p in Model.Archived) { <tr><td><strong>@p.Name</strong></td><td class="muted">@p.Sku</td><td>@Ui.Date(p.DeletedAt)</td><td class="action-cell"><form method="post" asp-page-handler="Restore"><input type="hidden" name="id" value="@p.Id" /><button class="btn btn-sm btn-outline" type="submit">Відновити</button></form></td></tr> }
+  </tbody></table></div> }
+ } else {
+  @if (Model.Products.Count==0) { <div class="empty-state"><span class="empty-symbol">⌕</span><h3>Товарів не знайдено</h3><p>Змініть запит або додайте новий товар.</p><a class="text-link" asp-page="/Products/Index">Очистити пошук →</a></div> }
+  else { <div class="table-wrap"><table class="data-table"><thead><tr><th>Товар</th><th>Категорія</th><th>Одиниця</th><th class="numeric">Ціна</th><th><span class="visually-hidden">Дії</span></th></tr></thead><tbody>
+  @foreach(var p in Model.Products) {
+   <tr><td><a class="record-link" asp-page="/Products/Edit" asp-route-id="@p.Id">@p.Name</a><span class="cell-note">@p.Sku</span></td><td>@p.CategoryName</td><td>@Ui.Unit(p.Unit)</td><td class="numeric money">@Ui.Money(p.SalePrice) <span>₴</span></td><td class="action-cell"><div class="row-actions"><a class="btn btn-sm btn-outline" asp-page="/Products/Edit" asp-route-id="@p.Id">Редагувати</a><a class="btn btn-sm btn-outline" asp-page="/Products/Suppliers" asp-route-id="@p.Id">Постачальники</a><form method="post" asp-page-handler="Delete" data-confirm="Перемістити товар до архіву? Історія продажів залишиться доступною."><input type="hidden" name="id" value="@p.Id" /><input type="hidden" asp-for="Search" /><button class="btn btn-sm btn-quiet" type="submit">В архів</button></form></div></td></tr>
+  }</tbody></table></div><div class="table-footer">Знайдено товарів: @Model.Products.Count</div> }
+ }
+</section>
+
+

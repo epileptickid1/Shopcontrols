@@ -1,0 +1,41 @@
+@page
+@model Store.Web.Pages.Managers.IndexModel
+@{ ViewData["Title"] = "Менеджери"; }
+<div class="page-heading">
+ <div><p class="eyebrow">Робоче місце</p><h1>Менеджери</h1><p class="page-subtitle">Оберіть, від чийого імені працювати, або змініть ім’я поточного менеджера.</p></div>
+ <span class="status">Локальний деморежим</span>
+</div>
+<div asp-validation-summary="All" class="validation-summary" role="alert"></div>
+<div class="manager-grid">
+ <section class="surface editor-panel">
+  <h2>Змінити менеджера</h2>
+  <p class="page-subtitle">Вхід без пароля. Вибір зберігається в цьому браузері та діє для всіх його вкладок.</p>
+  <form method="post" asp-page-handler="Switch">
+   <div class="field">
+    <label for="manager">Менеджер</label>
+    <select class="form-select" id="manager" name="username" required>
+     @if (Model.CurrentManager is null) { <option value="">Оберіть менеджера</option> }
+     @foreach (var manager in Model.Managers) {
+      <option value="@manager.Username" selected="@(manager.Username == Model.SelectedUsername)">@manager.FullName · №@manager.Id</option>
+     }
+    </select>
+   </div>
+   <div class="form-actions"><button type="submit" class="btn btn-primary" disabled="@(Model.Managers.Count == 0)">Переключитися</button></div>
+  </form>
+  <p class="audit-note">Нові операції записуються за вибраним менеджером. Після перемикання оновіть форми, відкриті в інших вкладках.</p>
+ </section>
+ <section class="surface editor-panel">
+  <h2>Ім’я поточного менеджера</h2>
+  @if (Model.CurrentManager is not null) {
+   <p class="page-subtitle">Зараз ви працюєте як <strong>@Model.CurrentManager.FullName</strong>.</p>
+   <form method="post" asp-page-handler="Rename">
+    <div class="field">
+     <label for="fullName">Ім’я та прізвище</label>
+     <input class="form-control" id="fullName" name="fullName" value="@Model.FullName" maxlength="200" required autocomplete="name" />
+     <small>До 200 символів. Ім’я зберігається у базі даних.</small>
+    </div>
+    <div class="form-actions"><button type="submit" class="btn btn-primary">Зберегти ім’я</button></div>
+   </form>
+  } else { <p class="page-subtitle">Поточний профіль неактивний. Оберіть іншого менеджера.</p> }
+ </section>
+</div>

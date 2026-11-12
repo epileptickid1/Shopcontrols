@@ -1,0 +1,14 @@
+@page "{id:long}"
+@model Store.Web.Pages.Supplies.DetailsModel
+@{ ViewData["Title"]="Постачання " + Model.Details.Supply.DocumentNumber; var supply=Model.Details.Supply; }
+<a class="back-link" asp-page="/Supplies/Index">← До постачань</a>
+<div class="page-heading"><div><p class="eyebrow">Постачання / Документ №@supply.Id</p><h1 class="document-title">@supply.DocumentNumber</h1><p class="page-subtitle">@Ui.Date(supply.ReceivedAt)</p></div><span class="status status-large @supply.Status">@Ui.Status(supply.Status)</span></div>
+<div class="document-meta surface"><div><span>Постачальник</span><strong>@supply.SupplierName</strong></div><div><span>Позицій у документі</span><strong>@Model.Details.Lines.Count</strong></div><div><span>Загальна сума</span><strong>@Ui.Money(supply.Total) ₴</strong></div></div>
+<section class="surface mt-section">
+ <div class="section-heading"><h2>Прийняті товари</h2></div>
+ <div class="table-wrap"><table class="data-table"><thead><tr><th>Товар</th><th>Відділ</th><th class="numeric">Кількість</th><th class="numeric">Закупівельна ціна</th><th class="numeric">Сума</th></tr></thead><tbody>
+ @foreach(var l in Model.Details.Lines) { <tr><td><strong>@l.ProductName</strong></td><td>@l.DepartmentName</td><td class="numeric">@Ui.Number(l.Quantity)</td><td class="numeric">@Ui.Money(l.UnitCost) ₴</td><td class="numeric money">@Ui.Money(l.LineTotal) ₴</td></tr> }
+ </tbody></table></div><div class="document-total"><span>Разом</span><strong>@Ui.Money(supply.Total) <small>₴</small></strong></div>
+</section>
+@if(supply.Status=="posted") { <p class="audit-note">Товари зараховані до залишків відповідних відділів. Проведений документ доступний для перегляду.</p> }
+
