@@ -1,0 +1,45 @@
+name: shopcontrols-nosql
+services:
+  postgres:
+    image: postgres:18.7
+    environment:
+      POSTGRES_USER: lab
+      POSTGRES_PASSWORD: shopcontrols-lab-only
+      POSTGRES_DB: shopcontrols_lab
+    ports: ["127.0.0.1:55433:5432"]
+    volumes: ["sql-data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1", "-U", "lab", "-d", "shopcontrols_lab"]
+      interval: 3s
+      timeout: 3s
+      retries: 30
+  mongo:
+    image: mongo:8.0
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lab
+      MONGO_INITDB_ROOT_PASSWORD: shopcontrols-lab-only
+    ports: ["127.0.0.1:57017:27017"]
+    volumes: ["mongo-data:/data/db"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--host", "mongo", "--username", "lab", "--password", "shopcontrols-lab-only", "--authenticationDatabase", "admin", "--eval", "db.adminCommand({ping: 1})"]
+      interval: 3s
+      timeout: 4s
+      retries: 30
+  neo4j:
+    image: neo4j:5.26
+    environment:
+      NEO4J_AUTH: neo4j/shopcontrols-lab-only
+      NEO4J_server_memory_heap_initial__size: 256m
+      NEO4J_server_memory_heap_max__size: 512m
+      NEO4J_server_memory_pagecache_size: 128m
+    ports: ["127.0.0.1:57474:7474", "127.0.0.1:57687:7687"]
+    volumes: ["graph-data:/data"]
+    healthcheck:
+      test: ["CMD", "cypher-shell", "-u", "neo4j", "-p", "shopcontrols-lab-only", "RETURN 1"]
+      interval: 5s
+      timeout: 8s
+      retries: 30
+volumes:
+  sql-data:
+  mongo-data:
+  graph-data:
