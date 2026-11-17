@@ -4,7 +4,7 @@
 
 **Стек:** C# / .NET 10, ASP.NET Core **Razor Pages**, Npgsql, PostgreSQL, Bootstrap. Repository + Unit of Work об’єднує операції в транзакції; читання БД відбувається через представлення, зміни - через збережені процедури.
 
-БД - store.dbml
+БД - store.dbml, Untitled.pdf
 
 
 
